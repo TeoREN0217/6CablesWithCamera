@@ -33,7 +33,7 @@ modelX=0
 modelY=0
 modelZ=0
 #TargetPoint position in inverse mode: 
-target_position=[0+modelX, -55+modelY,160+modelZ]
+target_position=[0+modelX, -55+modelY,100+modelZ]
 # target_position=[0, -55,160]
 
 #EffectorPoint on the robot:
@@ -79,7 +79,7 @@ def effectorTarget(parentNode, position=target_position):
     target = parentNode.addChild('Target')
     target.addObject('EulerImplicitSolver', firstOrder=True)
     target.addObject('CGLinearSolver')
-    target.addObject('MechanicalObject', name='dofs', position=position, showObject=False, showObjectScale=2, drawMode=2, showColor=[1., 1., 1., 1.])
+    target.addObject('MechanicalObject', name='dofs', position=position, showObject=True, showObjectScale=2, drawMode=2, showColor=[1., 1., 1., 1.])
     target.addObject('UncoupledConstraintCorrection')
     return target
 ####################
@@ -87,7 +87,7 @@ def effectorTarget(parentNode, position=target_position):
 ##########################################
 class Throat():
     #Setting basic properties about your throat robot
-    def __init__(self, parentNode, youngModulus=8000, poissonRatio=0.45, totalMass=0.07):  
+    def __init__(self, parentNode, youngModulus=10000, poissonRatio=0.45, totalMass=0.07):  
         self.node = parentNode.addChild('Throat')
         #Loading vtk file and some necessary steps
         self.node.addObject('MeshVTKLoader', name='loader', filename=path+'728_v1.vtk')
@@ -98,6 +98,7 @@ class Throat():
         #Adding cables to your robot
         self.__addCables()
         self.addTip()
+        self.addFixedbox()
 
     def __addCables(self):
         #Define a cable      
@@ -203,6 +204,10 @@ class Throat():
         tip3=self.node.addChild('Tip3')
         tip3.addObject('MechanicalObject',name='tip3', position=[ -cablelength*cos(pi/6),-cablelength*cos(pi/3),130])
         tip3.addObject('BarycentricMapping', mapForces=False, mapMasses=False)
+    def addFixedbox(self):
+        FixedBox=self.node.addChild("FixedBox")
+        FixedBox.addObject('BoxROI', name='ROI1',box='5 5 0 -5 -5 -10', drawBoxes='true')
+        FixedBox.addObject('RestShapeSpringsForceField', points='@ROI1.indices', stiffness='1e12')
 
         
 ##########################################
@@ -368,6 +373,7 @@ def createScene(rootNode):
     throat.addCollisionModel()
     
     
+    
     #Make some points bigger, this step is not necessary
     #It only help to observe points on each parts
     # setData(simulation.RigidifiedStructure.RigidParts.dofs, showObject=True, showObjectScale=1, drawMode=2)
@@ -379,8 +385,8 @@ def createScene(rootNode):
     ##########################################
     # patient(rootNode)
     # patient_static(rootNode)
-    patient_real(rootNode)
-    glottis(rootNode)
+    # patient_real(rootNode)
+    # glottis(rootNode)
     #Open interaction for collision model
     rootNode.addObject('DefaultPipeline')
     rootNode.addObject('BruteForceBroadPhase')
@@ -455,24 +461,20 @@ def createScene(rootNode):
             # effNode.PositionEffector.effectorGoal.value=[target.position.value[0]]
             myValueFile.append([cable1.CableActuator.displacement.value,cable2.CableActuator.displacement.value,cable3.CableActuator.displacement.value,
                                 cable4.CableActuator.displacement.value,cable5.CableActuator.displacement.value,cable6.CableActuator.displacement.value,
-                                slide.displacement.value,
                                 factor,
                                 effector.MechanicalObject.position.value[0][0],effector.MechanicalObject.position.value[0][1],effector.MechanicalObject.position.value[0][2]])
             myForcesFile.append([cable1.CableActuator.force.value,cable2.CableActuator.force.value,cable3.CableActuator.force.value,
                                 cable4.CableActuator.force.value,cable5.CableActuator.force.value,cable6.CableActuator.force.value,
-                                slide.force.value,
                                 factor])
         else:
             effNode.PositionEffector.effectorGoal.value=[target.position.value[0]]
             myValueFile.append([cable1.CableActuator.displacement.value,cable2.CableActuator.displacement.value,cable3.CableActuator.displacement.value,
                                 cable4.CableActuator.displacement.value,cable5.CableActuator.displacement.value,cable6.CableActuator.displacement.value,
-                                slide.displacement.value,
                                 factor,
                                 effector.MechanicalObject.position.value[0][0],effector.MechanicalObject.position.value[0][1],effector.MechanicalObject.position.value[0][2]])
             print('Get Value!'+str(factor))
             myForcesFile.append([cable1.CableActuator.force.value,cable2.CableActuator.force.value,cable3.CableActuator.force.value,
                                 cable4.CableActuator.force.value,cable5.CableActuator.force.value,cable6.CableActuator.force.value,
-                                slide.force.value,
                                 factor])
 
             
@@ -480,16 +482,16 @@ def createScene(rootNode):
             if win32gui.IsWindow(hwnd) and win32gui.IsWindowEnabled(hwnd) and win32gui.IsWindowVisible(hwnd):
                 hwnd_title.update({hwnd:win32gui.GetWindowText(hwnd)})
 
-        win32gui.EnumWindows(get_all_hwnd, 0)
+        # win32gui.EnumWindows(get_all_hwnd, 0)
         # find the window name
         # for h,t in hwnd_title.items():
         #     if t != "":
         #         print(h, t)
         # # ScreenShot
-        hwnd = win32gui.FindWindow(None, 'SOFA v22.06.99 - C:/Users/TeoRen/Desktop/sim2real_ThroatRobotwithPatientlocal/throat_v60_InverseMode.py')
-        screen = QApplication.primaryScreen()
-        img = screen.grabWindow(hwnd).toImage()
-        img.save(Img_path+str(factor)+"_screenshot.jpg")    
+        # hwnd = win32gui.FindWindow(None, 'SOFA v22.06.99 - C:/Users/TeoRen/Desktop/sim2real_ThroatRobotwithPatientlocal/throat_v60_InverseMode.py')
+        # screen = QApplication.primaryScreen()
+        # img = screen.grabWindow(hwnd).toImage()
+        # img.save(Img_path+str(factor)+"_screenshot.jpg")    
         
     def myOnDone1(tip1,tip2,tip3,camera_position1,cable1,cable2,cable3,cable4,cable5,cable6,print_flag,factor,effector,target,rootNode,hwnd_title):
         # pass
